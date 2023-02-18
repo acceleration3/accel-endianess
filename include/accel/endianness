@@ -41,7 +41,7 @@ namespace accel
             template<typename T, std::size_t size>
             struct _swap_bytes
             {
-                inline void operator()(T* data, std::size_t count)
+                inline void operator()(T& data)
                 {
                     // Fail if any case falls into this one
                 }
@@ -50,7 +50,7 @@ namespace accel
             template<typename T>
             struct _swap_bytes<T, 1>
             {
-                inline void operator()(T* data, std::size_t count)
+                inline void operator()(T& data)
                 {
                     // Do nothing for 1 byte size element
                 }
@@ -59,54 +59,45 @@ namespace accel
             template<typename T>
             struct _swap_bytes<T, 2>
             {
-                inline void operator()(T* data, std::size_t count)
+                inline void operator()(T& data)
                 {
-                    for (std::size_t i = 0; i < count; i++)
-                    {
-        #if defined(__GNUC__)
-                        data[i] = __builtin_bswap16(data[i]);
-        #elif defined(_MSC_VER)
-                        data[i] = _byteswap_ushort(data[i]);
-        #else
-                        data[i] = _generic_swap(data[i]);
-        #endif
-                    }
+#if defined(__GNUC__)
+                        data = __builtin_bswap16(data);
+#elif defined(_MSC_VER)
+                        data = _byteswap_ushort(data);
+#else
+                        data = _generic_swap(data);
+#endif
                 }
             };
 
             template<typename T>
             struct _swap_bytes<T, 4>
             {
-                inline void operator()(T* data, std::size_t count)
+                inline void operator()(T& data)
                 {
-                    for (std::size_t i = 0; i < count; i++)
-                    {
-        #if defined(__GNUC__)
-                        data[i] = __builtin_bswap32(data[i]);
-        #elif defined(_MSC_VER)
-                        data[i] = _byteswap_ulong(data[i]);
-        #else
-                        data[i] = _generic_swap(data[i]);
-        #endif
-                    }
+#if defined(__GNUC__)
+                    data = __builtin_bswap32(data);
+#elif defined(_MSC_VER)
+                    data = _byteswap_ulong(data);
+#else
+                    data = _generic_swap(data);
+#endif
                 }
             };
 
             template<typename T>
             struct _swap_bytes<T, 8>
             {
-                inline void operator()(T* data, std::size_t count)
+                inline void operator()(T& data)
                 {
-                    for (std::size_t i = 0; i < count; i++)
-                    {
-        #if defined(__GNUC__)
-                        data[i] = __builtin_bswap64(data[i]);
-        #elif defined(_MSC_VER)
-                        data[i] = _byteswap_uint64(data[i]);
-        #else
-                        data[i] = _generic_swap(data[i]);
-        #endif
-                    }
+#if defined(__GNUC__)
+                        data = __builtin_bswap64(data);
+#elif defined(_MSC_VER)
+                        data = _byteswap_uint64(data);
+#else
+                        data = _generic_swap(data);
+#endif
                 }
             };
 
@@ -114,9 +105,9 @@ namespace accel
             template<endiannesses from, endiannesses to, typename T, std::size_t size>
             struct swap_bytes
             {
-                inline void operator()(T* data, std::size_t count)
+                inline void operator()(T& data)
                 {
-                    _swap_bytes<T, size>()(data, count);
+                    _swap_bytes<T, size>()(data);
                 }
             };
 
@@ -124,13 +115,13 @@ namespace accel
             template<typename T, std::size_t size> 
             struct swap_bytes<endiannesses::little_endian, endiannesses::little_endian, T, size> 
             { 
-                inline void operator()(T* data, std::size_t count) {} 
+                inline void operator()(T& data) {} 
             };
             
             template<typename T, std::size_t size> 
             struct swap_bytes<endiannesses::big_endian, endiannesses::big_endian, T, size> 
             { 
-                inline void operator()(T* data, std::size_t count) {} 
+                inline void operator()(T& data) {} 
             };
         }
 
@@ -139,9 +130,9 @@ namespace accel
         template<> struct opposite_endianness<endianness::endiannesses::little_endian> { static constexpr auto value = endianness::endiannesses::big_endian; };
 
         template<endiannesses from, endiannesses to, typename T>
-        inline void swap_endianness(T* data, std::size_t count)
+        inline void swap_endianness(T& data)
         {
-            return details::swap_bytes<from, to, T, sizeof(T)>()(data, count);
+            return details::swap_bytes<from, to, T, sizeof(T)>()(data);
         }
     }
 }
