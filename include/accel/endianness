@@ -1,0 +1,149 @@
+#ifndef ACCEL_ENDIANNESS_H
+#define ACCEL_ENDIANNESS_H
+
+#include <cstdint>
+#include <cstddef>
+  
+#if defined(_MSC_VER)
+    #include <cstdlib>
+#endif
+
+namespace accel
+{
+    namespace endianness
+    {
+        enum class endiannesses
+        {
+            little_endian,
+            big_endian,
+            network_endian = big_endian,
+#if defined(PLATFORM_LITTLE_ENDIAN)
+            host_endian = little_endian,
+#elif defined(PLATFORM_BIG_ENDIAN)
+            host_endian = big_endian
+#else
+            #error "Couldn't detect the platform's endianness."
+#endif
+        };
+
+        namespace details
+        {
+            template<typename T> 
+            static T _generic_swap(const T& val) 
+            {
+                std::size_t totalBytes = sizeof(val);
+                T swapped = (T) 0;
+                for (std::size_t i = 0; i < totalBytes; i++)
+                    swapped |= (val >> (8 * (totalBytes - i - 1)) & 0xFF) << (8 * i);
+                return swapped;
+            }
+
+            template<typename T, std::size_t size>
+            struct _swap_bytes
+            {
+                inline void operator()(T* data, std::size_t count)
+                {
+                    // Fail if any case falls into this one
+                }
+            };
+
+            template<typename T>
+            struct _swap_bytes<T, 1>
+            {
+                inline void operator()(T* data, std::size_t count)
+                {
+                    // Do nothing for 1 byte size element
+                }
+            };
+
+            template<typename T>
+            struct _swap_bytes<T, 2>
+            {
+                inline void operator()(T* data, std::size_t count)
+                {
+                    for (std::size_t i = 0; i < count; i++)
+                    {
+        #if defined(__GNUC__)
+                        data[i] = __builtin_bswap16(data[i]);
+        #elif defined(_MSC_VER)
+                        data[i] = _byteswap_ushort(data[i]);
+        #else
+                        data[i] = _generic_swap(data[i]);
+        #endif
+                    }
+                }
+            };
+
+            template<typename T>
+            struct _swap_bytes<T, 4>
+            {
+                inline void operator()(T* data, std::size_t count)
+                {
+                    for (std::size_t i = 0; i < count; i++)
+                    {
+        #if defined(__GNUC__)
+                        data[i] = __builtin_bswap32(data[i]);
+        #elif defined(_MSC_VER)
+                        data[i] = _byteswap_ulong(data[i]);
+        #else
+                        data[i] = _generic_swap(data[i]);
+        #endif
+                    }
+                }
+            };
+
+            template<typename T>
+            struct _swap_bytes<T, 8>
+            {
+                inline void operator()(T* data, std::size_t count)
+                {
+                    for (std::size_t i = 0; i < count; i++)
+                    {
+        #if defined(__GNUC__)
+                        data[i] = __builtin_bswap64(data[i]);
+        #elif defined(_MSC_VER)
+                        data[i] = _byteswap_uint64(data[i]);
+        #else
+                        data[i] = _generic_swap(data[i]);
+        #endif
+                    }
+                }
+            };
+
+            // Cases that require a swap
+            template<endiannesses from, endiannesses to, typename T, std::size_t size>
+            struct swap_bytes
+            {
+                inline void operator()(T* data, std::size_t count)
+                {
+                    _swap_bytes<T, size>()(data, count);
+                }
+            };
+
+            // Cases that don't require a swap
+            template<typename T, std::size_t size> 
+            struct swap_bytes<endiannesses::little_endian, endiannesses::little_endian, T, size> 
+            { 
+                inline void operator()(T* data, std::size_t count) {} 
+            };
+            
+            template<typename T, std::size_t size> 
+            struct swap_bytes<endiannesses::big_endian, endiannesses::big_endian, T, size> 
+            { 
+                inline void operator()(T* data, std::size_t count) {} 
+            };
+        }
+
+        template<endianness::endiannesses endianness> struct opposite_endianness{};
+        template<> struct opposite_endianness<endianness::endiannesses::big_endian> { static constexpr auto value = endianness::endiannesses::little_endian; };
+        template<> struct opposite_endianness<endianness::endiannesses::little_endian> { static constexpr auto value = endianness::endiannesses::big_endian; };
+
+        template<endiannesses from, endiannesses to, typename T>
+        inline void swap_endianness(T* data, std::size_t count)
+        {
+            return details::swap_bytes<from, to, T, sizeof(T)>()(data, count);
+        }
+    }
+}
+
+#endif
