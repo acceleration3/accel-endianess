@@ -1,4 +1,4 @@
-#include <accel/endianness>
+#include <accel/endianess>
 
 #include <iostream>
 #include <cassert>
@@ -6,7 +6,7 @@
 
 using namespace accel;
 
-#define opposite_swap(data) endianness::swap_endianness<endianness::endiannesses::host_endian, endianness::opposite_endianness<endianness::endiannesses::host_endian>::value>(data)
+#define opposite_swap(data) endianess::swap_endianess<endianess::endianesses::host_endian, endianess::opposite_endianess<endianess::endianesses::host_endian>::value>(data)
 
 int main(int argc, char* argv[])
 {

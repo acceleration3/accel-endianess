@@ -1,5 +1,5 @@
-#ifndef ACCEL_ENDIANNESS_H
-#define ACCEL_ENDIANNESS_H
+#ifndef ACCEL_ENDIANESS_H
+#define ACCEL_ENDIANESS_H
 
 #include <cstdint>
 #include <cstddef>
@@ -10,9 +10,9 @@
 
 namespace accel
 {
-    namespace endianness
+    namespace endianess
     {
-        enum class endiannesses
+        enum class endianesses
         {
             little_endian,
             big_endian,
@@ -22,7 +22,7 @@ namespace accel
 #elif defined(PLATFORM_BIG_ENDIAN)
             host_endian = big_endian
 #else
-            #error "Couldn't detect the platform's endianness."
+            #error "Couldn't detect the platform's endianess."
 #endif
         };
 
@@ -102,7 +102,7 @@ namespace accel
             };
 
             // Cases that require a swap
-            template<endiannesses from, endiannesses to, typename T, std::size_t size>
+            template<endianesses from, endianesses to, typename T, std::size_t size>
             struct swap_bytes
             {
                 inline void operator()(T& data)
@@ -113,24 +113,24 @@ namespace accel
 
             // Cases that don't require a swap
             template<typename T, std::size_t size> 
-            struct swap_bytes<endiannesses::little_endian, endiannesses::little_endian, T, size> 
+            struct swap_bytes<endianesses::little_endian, endianesses::little_endian, T, size> 
             { 
                 inline void operator()(T& data) {} 
             };
             
             template<typename T, std::size_t size> 
-            struct swap_bytes<endiannesses::big_endian, endiannesses::big_endian, T, size> 
+            struct swap_bytes<endianesses::big_endian, endianesses::big_endian, T, size> 
             { 
                 inline void operator()(T& data) {} 
             };
         }
 
-        template<endianness::endiannesses endianness> struct opposite_endianness{};
-        template<> struct opposite_endianness<endianness::endiannesses::big_endian> { static constexpr auto value = endianness::endiannesses::little_endian; };
-        template<> struct opposite_endianness<endianness::endiannesses::little_endian> { static constexpr auto value = endianness::endiannesses::big_endian; };
+        template<endianess::endianesses endianess> struct opposite_endianess{};
+        template<> struct opposite_endianess<endianess::endianesses::big_endian> { static constexpr auto value = endianess::endianesses::little_endian; };
+        template<> struct opposite_endianess<endianess::endianesses::little_endian> { static constexpr auto value = endianess::endianesses::big_endian; };
 
-        template<endiannesses from, endiannesses to, typename T>
-        inline void swap_endianness(T& data)
+        template<endianesses from, endianesses to, typename T>
+        inline void swap_endianess(T& data)
         {
             return details::swap_bytes<from, to, T, sizeof(T)>()(data);
         }
