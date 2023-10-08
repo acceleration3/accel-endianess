@@ -134,14 +134,6 @@ namespace accel
         {
             details::swap_bytes<from, to, T, sizeof(T)>()(data);
         }
-
-        template<endianesses from, endianesses to, typename T>
-        inline T swap_endianess(const T& data)
-        {
-            T temp = data;
-            details::swap_bytes<from, to, T, sizeof(T)>()(temp);
-            return temp;
-        }
     }
 }
 

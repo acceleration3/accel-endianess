@@ -30,22 +30,6 @@ int main(int argc, char* argv[])
 		assert(test == 0x7766554433221100);
 	}
 
-	// Const copy swaps
-	{
-		const std::uint16_t test = 0xABCD;
-		assert(opposite_swap(test) == 0xCDAB);
-	}
-
-	{
-		const std::uint32_t test = 0x00ABCDEF;
-		assert(opposite_swap(test) == 0xEFCDAB00);
-	}
-
-	{
-		const std::uint64_t test = 0x0011223344556677;
-		assert(opposite_swap(test) == 0x7766554433221100);
-	}
-
 	std::cout << "All tests completed sucessfully.";
 
 	return 0;
