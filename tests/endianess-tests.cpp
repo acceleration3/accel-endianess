@@ -6,10 +6,12 @@
 
 using namespace accel;
 
-#define opposite_swap(data) endianess::swap_endianess<endianess::endianesses::host_endian, endianess::opposite_endianess<endianess::endianesses::host_endian>::value>(data)
+using opposite_endianess = endianess::opposite_endianess<endianess::endianesses::host_endian>;
+#define opposite_swap(data) endianess::swap_endianess<endianess::endianesses::host_endian, opposite_endianess::value>(data)
 
 int main(int argc, char* argv[])
 {
+	// In-place swaps test
 	{
 		std::uint16_t test = 0xABCD;
 		opposite_swap(test);
@@ -26,6 +28,22 @@ int main(int argc, char* argv[])
 		std::uint64_t test = 0x0011223344556677;
 		opposite_swap(test);
 		assert(test == 0x7766554433221100);
+	}
+
+	// Const copy swaps
+	{
+		const std::uint16_t test = 0xABCD;
+		assert(opposite_swap(test) == 0xCDAB);
+	}
+
+	{
+		const std::uint32_t test = 0x00ABCDEF;
+		assert(opposite_swap(test) == 0xEFCDAB00);
+	}
+
+	{
+		const std::uint64_t test = 0x0011223344556677;
+		assert(opposite_swap(test) == 0x7766554433221100);
 	}
 
 	std::cout << "All tests completed sucessfully.";
