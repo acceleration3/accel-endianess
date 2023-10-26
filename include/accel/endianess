@@ -8,10 +8,14 @@
     #include <cstdlib>
 #endif
 
+#include <accel/macros>
+
 namespace accel
 {
     namespace endianess
     {
+        using byte_t = BYTE_TYPE;
+
         enum class endianesses
         {
             little_endian,
@@ -28,15 +32,21 @@ namespace accel
 
         namespace details
         {
-            template<typename T> 
-            static T _generic_swap(const T& val) 
+            template <typename T>
+            static T _generic_swap(const T& val)
             {
-                std::size_t totalBytes = sizeof(val);
-                T swapped = (T) 0;
-                for (std::size_t i = 0; i < totalBytes; i++)
-                    swapped |= (val >> (8 * (totalBytes - i - 1)) & 0xFF) << (8 * i);
+                std::size_t total_bytes = sizeof(val);
+            
+                T swapped;
+                const byte_t* src = reinterpret_cast<const byte_t*>(&val);
+                byte_t* dest = reinterpret_cast<byte_t*>(&swapped);
+
+                for (std::size_t i = 0; i < total_bytes; ++i)
+                    dest[i] = src[total_bytes - i - 1];
+
                 return swapped;
             }
+
 
             template<typename T, std::size_t size>
             struct _swap_bytes
@@ -61,9 +71,9 @@ namespace accel
             {
                 inline void operator()(T& data)
                 {
-#if defined(__GNUC__)
+#if defined(COMPILER_CLANG) || defined(COMPILER_GCC)
                         data = __builtin_bswap16(data);
-#elif defined(_MSC_VER)
+#elif defined(COMPILER_MSVC)
                         data = _byteswap_ushort(data);
 #else
                         data = _generic_swap(data);
@@ -76,13 +86,13 @@ namespace accel
             {
                 inline void operator()(T& data)
                 {
-#if defined(__GNUC__)
+#if defined(COMPILER_CLANG) || defined(COMPILER_GCC)
                     data = __builtin_bswap32(data);
-#elif defined(_MSC_VER)
+#elif defined(COMPILER_MSVC)
                     data = _byteswap_ulong(data);
 #else
                     data = _generic_swap(data);
-#endif
+#endif 
                 }
             };
 
@@ -91,9 +101,9 @@ namespace accel
             {
                 inline void operator()(T& data)
                 {
-#if defined(__GNUC__)
+#if defined(COMPILER_CLANG) || defined(COMPILER_GCC)
                         data = __builtin_bswap64(data);
-#elif defined(_MSC_VER)
+#elif defined(COMPILER_MSVC)
                         data = _byteswap_uint64(data);
 #else
                         data = _generic_swap(data);
